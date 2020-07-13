@@ -59,22 +59,23 @@
 // a better design would be to do a mathmatical calculation on how many
 // itterations it takes to return to the original order based on the number of balls.
 
+// This class emulates the tray that holds the balls that indicate time.
 class tray {
 
     constructor(maxSize) {
 
-        this._maxSize = maxSize
+        this._maxSize = maxSize  // maximum number of balls the tray can hold
 
         this.tray = []   // array to hold the balls as they enter
     
     }
 
     // function to add a ball to the tray
-    // if the ball causes the tray to reach max size, the contents of the 
+    // if the ball causes the tray to exceed its max size, the contents of the 
     // tray is returned. The last ball is returned seperatly
     addBall(ballNum) {
 
-        let rtnValue = { lastBall: null, trayContents: [] }  // traycontents could be null but this shows we intend to return an array
+        let rtnValue = { lastBall: null, trayContents: [] }  // trayContents could be null but this shows we intend to return an array
 
         if (this.tray.length == this._maxSize) {
 
@@ -137,32 +138,54 @@ function isSorted(arrayToCheck, expectedBalls) {
     return rtnValue
 }
 
-function findCompleteCycle(numberOfBalls) {
+export default function findCompleteCycle(numberOfBalls) {
 
-    let cycles = BigInt(0)  //  each cycle is one minute.  BigInt uses all 64 bits as an int
+    let cycles = 0  //  each cycle is one minute.  for 127 balls the number of cycles is 3477600.  No need to use BigInt
     let minuteTray = new tray(4)
     let fiveMinuteTray = new tray(11)
     let hourTray = new tray(11) 
     let feederTray = [] // main feeder tray.  This is the tray all balls return to and start from
-    let currentBall
+    let currentBall // place to hold the current ball
+
+    // make sure number of balls is a number
+    let numBalls = 0
+
+    try {
+
+        numBalls = Number(numberOfBalls)
+
+    }
+    catch (error) {
+
+        throw new Error(`${numberOfBalls} is invalid. Number of balls must be numeric`)
+
+    }
+
+    // make sure we have an int
+    if (!Number.isInteger(numBalls)) {
+
+        throw new Error(`${numberOfBalls} is invalid. Number of balls must be an integer`)
+
+    }
 
     // check to make sure the number of balls is within our parameters
-    if (numberOfBalls < 27 || numberOfBalls > 127) {
+    if (numBalls < 27 || numBalls > 127) {
 
-        throw new Error(`${numberOfBalls} balls is outside of range 27 to 127`)
+        throw new Error(`${numBalls} balls is outside of range 27 to 127`)
+
     }
 
     // initialize array with balls. each ball is consecutivly numbered
-    feederTray = Array.from(Array(numberOfBalls), (element, index) => index + 1)
+    feederTray = Array.from(Array(numBalls), (element, index) => index + 1)
 
     do {
 
-        cycles = cycles + 1n // ++ not supported with bigint
+        cycles++
 
         // take a ball off of the start of the array
         currentBall = feederTray.shift()
 
-        // put ball in minutes
+        // put ball in minutes tray
         let minResults = minuteTray.addBall(currentBall)
 
         // did we fill it?
@@ -196,9 +219,7 @@ function findCompleteCycle(numberOfBalls) {
         } // end if minutes
 
 
-    } while (isSorted(feederTray, numberOfBalls) == false)
+    } while (isSorted(feederTray, numBalls) == false)
 
     return cycles
 }
-
-console.log(findCompleteCycle(127))
